@@ -3,7 +3,7 @@ Seeded, so runs are repeatable. History ends yesterday so live demo traffic ("no
 Run `python scripts/generate.py` for a summary.
 """
 import random
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 FMT = "%Y-%m-%dT%H:%M:%S"
 FIRST = "Aarav Vivaan Aditya Ishaan Kabir Rohan Arjun Neha Priya Ananya Diya Kavya Meera Riya Sana Imran Farah Karan Pooja Sneha".split()
@@ -49,14 +49,27 @@ def pass_through(rng, sources, mule, dests, start):
     return ins + outs
 
 
+def ring(rng, tag, end):
+    """Layering ring: funds hop R1→R2→R3→R4→S, then S splits ~₹47k transfers back into the ring.
+    Fires the graph layer (cycle) and the rules layer (structuring) together. Last transfer is at `end`."""
+    s, r = f"{tag}S", [f"{tag}{i}" for i in range(1, 5)]
+    hops = [(r[0], r[1]), (r[1], r[2]), (r[2], r[3]), (r[3], s), (s, r[0]), (s, r[1]), (s, r[2])]
+    names = {a: f"{rng.choice(FIRST)} {rng.choice(LAST)}" for a in [s, *r]}
+    txs = []
+    for i, (f, t) in enumerate(hops):
+        x = _tx(f, t, rng.uniform(45_000, 49_900), end - timedelta(minutes=3 * (len(hops) - 1 - i)), "IMPS")
+        txs.append(x | {"from_name": names[f], "to_name": names[t]})
+    return txs
+
+
 def generate(seed=42, days=3, n=200, inject=True):
     rng = random.Random(seed)
     ids = [f"AC{i:04d}" for i in range(1, n + 1)]
-    merchants, employers, people = ids[:20], ids[20:30], ids[30:]
+    merchants, employers, people = ids[:20], ids[20:45], ids[45:]  # 25 employers: each pays < 8 salaries (fan-out threshold)
     names = {i: f"{rng.choice(SHOPS)} {i[-4:]}" for i in merchants}
     names |= {i: f"{rng.choice(LAST)} Industries Pvt Ltd" for i in employers}
     names |= {i: f"{rng.choice(FIRST)} {rng.choice(LAST)}" for i in people}
-    start = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(days=days)
+    start = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0, tzinfo=None) - timedelta(days=days)
     txs = normal(rng, people, merchants, employers, start, days)
     if inject:
         bad = rng.sample(people, 14)

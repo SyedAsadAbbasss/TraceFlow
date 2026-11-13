@@ -1,6 +1,6 @@
 """Stream generated transactions into the running API.
-Usage: python scripts/replay.py [--delay 0.3] [--url http://localhost:8000] [--seed 42]
-Replaying twice duplicates data: stop the API and delete traceflow.db first (a reset endpoint comes in phase 2).
+Usage: python scripts/replay.py [--delay 0.3] [--url http://localhost:8000] [--seed 42] [--calm]
+Replaying twice duplicates data: POST /api/demo/reset first.
 """
 import argparse
 import sys
@@ -14,9 +14,10 @@ ap = argparse.ArgumentParser()
 ap.add_argument("--delay", type=float, default=0.3)
 ap.add_argument("--url", default="http://localhost:8000")
 ap.add_argument("--seed", type=int, default=42)
+ap.add_argument("--calm", action="store_true", help="normal traffic only (no structuring/pass-through in the history)")
 a = ap.parse_args()
 
-txs = generate(a.seed)
+txs = generate(a.seed, inject=not a.calm)
 with httpx.Client(base_url=a.url, timeout=10) as client:
     for i, t in enumerate(txs, 1):
         r = client.post("/api/transactions", json=t)

@@ -1,11 +1,13 @@
 import json
+import random
 from datetime import datetime, timezone
 from typing import Literal
 
 from fastapi import Depends, FastAPI, HTTPException, Query
 from pydantic import BaseModel, Field, model_validator
+from scripts.generate import ring  # the generator owns the synthetic patterns; run uvicorn from the repo root
 
-from . import db, rules, score
+from . import db, graph, rules, score
 
 app = FastAPI(title="TraceFlow")
 
@@ -86,6 +88,33 @@ def set_status(alert_id: int, body: StatusIn, conn=Depends(get_db)):
         if conn.execute("UPDATE alerts SET status=? WHERE id=?", (body.status, alert_id)).rowcount == 0:
             raise HTTPException(404, "alert not found")
     return {"id": alert_id, "status": body.status}
+
+
+@app.get("/api/graph")
+def get_graph(account_id: str, hours: int = Query(graph.WINDOW_H, ge=1, le=720), conn=Depends(get_db)):
+    end = conn.execute("SELECT MAX(ts) FROM transactions WHERE from_account=?1 OR to_account=?1", (account_id,)).fetchone()[0]
+    if not end:
+        raise HTTPException(404, "account not found")
+    return graph.view(conn, account_id, end, hours)  # window ends at the account's latest transaction
+
+
+@app.post("/api/demo/inject-ring")
+def inject_ring(conn=Depends(get_db)):
+    """Laundering ring (cycle + structuring), sent through the normal ingest path with timestamps ending now."""
+    n = conn.execute("SELECT COUNT(*) FROM accounts WHERE id LIKE 'RG%-S'").fetchone()[0]
+    tag = f"RG{n + 1:02d}-"
+    txs = ring(random.Random(n), tag, datetime.now(timezone.utc).replace(tzinfo=None))
+    ids = sorted({a for t in txs for a in score.ingest(conn, t)["alert_ids"]})
+    alerts = conn.execute(f"SELECT id, account_id, pattern, level, score FROM alerts WHERE id IN ({','.join('?' * len(ids))})", ids)
+    return {"ring": tag, "transactions": len(txs), "alerts": [dict(a) for a in alerts]}
+
+
+@app.post("/api/demo/reset")
+def reset_demo(conn=Depends(get_db)):
+    with conn:
+        for table in ("alerts", "transactions", "accounts"):
+            conn.execute(f"DELETE FROM {table}")
+    return {"ok": True}
 
 
 @app.get("/api/stats")

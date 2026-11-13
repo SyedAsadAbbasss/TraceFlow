@@ -89,6 +89,47 @@ def test_alert_api_flow(conn):
     assert c.get("/api/alerts/999").status_code == 404
 
 
+@pytest.mark.parametrize("k", [3, 5])
+def test_cycle_detected(conn, k):
+    n = [f"N{i}" for i in range(k)]
+    for i in range(k):
+        r = tx(conn, n[i], n[(i + 1) % k], 20_000, hrs=i)
+    assert f"({k} accounts" in r["reasons"][0] and r["risk_score"] >= 40
+    assert alert_patterns(conn) == ["cycle"]
+
+
+def test_chain_and_oversized_loop_are_not_cycles(conn):
+    for i in range(6):  # A0 -> A1 -> ... -> A6, never returns
+        tx(conn, f"A{i}", f"A{i + 1}", 20_000, hrs=i)
+    for i in range(7):  # 7 accounts in a loop: beyond the 3-6 bound
+        tx(conn, f"L{i}", f"L{(i + 1) % 7}", 20_000, hrs=10 + i)
+    assert alert_patterns(conn) == []
+
+
+def test_fan_in_and_fan_out(conn):
+    for i in range(10):
+        r = tx(conn, f"S{i}", "MULE", 15_000, hrs=i * 0.1)
+    assert "10 different accounts sent money to this account" in " ".join(r["reasons"])
+    assert conn.execute("SELECT account_id FROM alerts WHERE pattern='fan_in'").fetchone()[0] == "MULE"  # receiver is flagged
+    for i in range(10):
+        r = tx(conn, "BOSS", f"R{i}", 15_000, hrs=3 + i * 0.1)
+    assert "sent money to 10 different accounts" in " ".join(r["reasons"])
+    assert conn.execute("SELECT account_id FROM alerts WHERE pattern='fan_out'").fetchone()[0] == "BOSS"
+
+
+def test_inject_ring_graph_and_reset(conn):
+    c = TestClient(appmod.app)
+    res = c.post("/api/demo/inject-ring").json()
+    assert {(a["pattern"], a["level"]) for a in res["alerts"]} == {("cycle", "high"), ("structuring", "high")}
+    g = c.get("/api/graph", params={"account_id": "RG01-S"}).json()
+    assert {n["id"] for n in g["nodes"] if n["in_cycle"]} == {"RG01-S", "RG01-1", "RG01-2", "RG01-3", "RG01-4"}
+    assert any(e["in_cycle"] for e in g["edges"]) and any(n["flagged"] for n in g["nodes"])
+    assert c.post("/api/demo/inject-ring").json()["ring"] == "RG02-"  # a second click makes a fresh ring
+    assert c.post("/api/demo/reset").status_code == 200
+    assert c.get("/api/stats").json()["transactions"] == 0
+    assert c.get("/api/graph", params={"account_id": "RG01-S"}).status_code == 404
+
+
 def test_generated_traffic_is_calm_except_injected(conn):
     for t in generate():
         score.ingest(conn, t)
