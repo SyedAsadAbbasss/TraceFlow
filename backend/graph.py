@@ -73,7 +73,7 @@ def view(conn, account_id, end, hours):
         "min_amount": SIGNIFICANT,
         "nodes": [{"id": a, "name": names.get(a, a), "focus": a == account_id, "flagged": a in flagged,
                    "in_cycle": a in cycle_nodes} for a in ids],
-        "edges": [{"from": u, "to": v, "amount": d["amount"], "in_cycle": (u, v) in cycle_edges}
+        "edges": [{"from": u, "to": v, "amount": d["amount"], "ts": d["ts"], "in_cycle": (u, v) in cycle_edges}
                   for u, v, d in ego.edges(data=True)],
         "cycles": cycles,
     }

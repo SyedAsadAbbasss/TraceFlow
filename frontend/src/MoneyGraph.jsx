@@ -32,7 +32,7 @@ function Legend() {
 }
 
 // The money-flow graph. Each dot is an account, each arrow a transfer. Accounts and arrows on a money loop are red.
-export default function MoneyGraph({ graph, transactions }) {
+export default function MoneyGraph({ graph }) {
   const box = useRef(null);
   const fg = useRef(null);
   const [width, setWidth] = useState(900);
@@ -46,15 +46,9 @@ export default function MoneyGraph({ graph, transactions }) {
     return () => window.removeEventListener('resize', fit);
   }, []);
 
-  // Turn the backend's answer into the shape the graph library wants. Also work out what each account sent and received,
-  // and when each transfer happened (the time is known for transfers listed in the alert's related transactions).
+  // Turn the backend's answer into the shape the graph library wants. Also work out what each account sent and received.
   const data = useMemo(() => {
     if (!graph) return { nodes: [], links: [] };
-    const latest = {};
-    for (const t of transactions || []) {
-      const key = t.from_account + '>' + t.to_account;
-      if (!latest[key] || t.ts > latest[key]) latest[key] = t.ts;
-    }
     const sent = {};
     const received = {};
     for (const e of graph.edges) {
@@ -63,9 +57,9 @@ export default function MoneyGraph({ graph, transactions }) {
     }
     return {
       nodes: graph.nodes.map((n) => ({ ...n, sent: sent[n.id] || 0, received: received[n.id] || 0 })),
-      links: graph.edges.map((e) => ({ source: e.from, target: e.to, amount: e.amount, in_cycle: e.in_cycle, time: latest[e.from + '>' + e.to] })),
+      links: graph.edges.map((e) => ({ source: e.from, target: e.to, amount: e.amount, in_cycle: e.in_cycle, time: e.ts })),
     };
-  }, [graph, transactions]);
+  }, [graph]);
 
   // Spread the accounts out so names and amounts do not overlap.
   useEffect(() => {
@@ -143,7 +137,7 @@ export default function MoneyGraph({ graph, transactions }) {
               ctx.fill();
             }}
             nodeLabel={(n) => `<b>${esc(n.name)}</b> (${esc(n.id)})<br/>Received ${money(n.received)} · Sent ${money(n.sent)}<br/><i>from the transfers shown</i>`}
-            linkLabel={(l) => `${money(l.amount)} · ${l.time ? esc(when(l.time)) : 'time not in this view'}`}
+            linkLabel={(l) => `${money(l.amount)} · ${when(l.time)}`}
             linkCurvature={0.2}
             linkColor={(l) => (l.in_cycle ? RED : GREY)}
             linkWidth={(l) => (l.in_cycle ? 3.5 : 1)}

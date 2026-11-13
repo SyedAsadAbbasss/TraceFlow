@@ -129,6 +129,7 @@ def test_inject_ring_graph_and_reset(conn):
     g = c.get("/api/graph", params={"account_id": "RG01-S"}).json()
     assert {n["id"] for n in g["nodes"] if n["in_cycle"]} == {"RG01-S", "RG01-1", "RG01-2", "RG01-3", "RG01-4"}
     assert any(e["in_cycle"] for e in g["edges"]) and any(n["flagged"] for n in g["nodes"])
+    assert all(re.fullmatch(r"\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d", e["ts"]) for e in g["edges"])  # every edge has its time
     assert c.post("/api/demo/inject-ring").json()["ring"] == "RG02-"  # a second click makes a fresh ring
     assert c.post("/api/demo/reset").status_code == 200
     assert c.get("/api/stats").json()["transactions"] == 0
