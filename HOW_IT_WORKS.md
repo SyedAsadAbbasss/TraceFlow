@@ -28,7 +28,7 @@ TraceFlow watches a stream of bank transfers (all fake, in ₹), gives each one 
 
 ## Demo steps
 
-1. One time: `cd frontend; npm install; npm run build; cd ..`
+1. `frontend/dist` is prebuilt. Only after changing the UI: `cd frontend; npm install; npm run build; cd ..`
 2. Start everything: `.\.venv\Scripts\python.exe -m uvicorn backend.app:app`
 3. Second terminal: `.\.venv\Scripts\python.exe scripts/replay.py --calm --delay 0.3` (normal traffic).
 4. Open `http://localhost:8000`: "All clear — no suspicious activity".

@@ -36,13 +36,15 @@ Points from all layers are added and capped at 100. Low is under 40, medium 40â€
 
 ## How to run
 
-Windows PowerShell, from the repo root. Needs Python 3.12 and Node.js (LTS) for the dashboard build.
+Windows PowerShell, from the repo root. Needs Python 3.12. Node.js (LTS) is only needed to change the dashboard.
+
+dist is prebuilt; rebuild with npm run build after UI changes.
 
 ```powershell
 python -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -r requirements.txt
 
-# build the React dashboard once (output goes to frontend/dist)
+# only after changing the UI: rebuild the React dashboard (output goes to frontend/dist)
 cd frontend; npm install; npm run build; cd ..
 
 # start the server (dashboard at http://localhost:8000, API docs at /docs)

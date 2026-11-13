@@ -6,5 +6,4 @@ __pycache__/
 *.db-shm
 data/
 node_modules/
-frontend/dist/
 .env
