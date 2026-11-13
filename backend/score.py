@@ -24,7 +24,8 @@ def ingest(conn, p):
         alert_ids = []
         if sc >= 40:  # one alert per strong pattern (>= 40 points), so two layers firing together show as two alerts
             strong = [h for h in hits if h[1] >= 40] or [max(hits, key=lambda h: h[1])]
-            alert_ids = [_alert(conn, tx, tx["to_account"] if h[0] == "fan_in" else tx["from_account"], h[0], sc, reasons)
+            alert_ids = [_alert(conn, tx, tx["to_account"] if h[0] == "fan_in" else tx["from_account"], h[0], sc,
+                                [h[2]] + [r for r in reasons if r != h[2]])  # this pattern's reason first
                          for h in strong]
     return {**tx, "risk_score": sc, "level": level(sc), "reasons": reasons, "alert_ids": alert_ids}
 

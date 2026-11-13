@@ -4,6 +4,7 @@ from datetime import datetime, timezone
 from typing import Literal
 
 from fastapi import Depends, FastAPI, HTTPException, Query
+from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field, model_validator
 from scripts.generate import ring  # the generator owns the synthetic patterns; run uvicorn from the repo root
 
@@ -44,6 +45,11 @@ def _json_row(r):
     d = dict(r)
     d["reasons"] = json.loads(d["reasons"])
     return d
+
+
+@app.get("/", include_in_schema=False)
+def dashboard():
+    return FileResponse(db.HERE / "static" / "index.html")
 
 
 @app.post("/api/transactions", status_code=201)
