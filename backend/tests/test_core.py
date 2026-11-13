@@ -4,6 +4,7 @@ import pytest
 from fastapi.testclient import TestClient
 import random
 import re
+import time
 
 from generate import generate, ring
 
@@ -159,6 +160,28 @@ def test_sar_pdf_is_one_page(conn):
         assert r.status_code == 200 and r.headers["content-type"] == "application/pdf" and r.content.startswith(b"%PDF")
         assert len(re.findall(rb"/Type /Page(?!s)", r.content)) == 1, a["pattern"]  # exactly one page
     assert c.get("/api/alerts/999/sar.pdf").status_code == 404
+
+
+def wait_for_feed(c):
+    for _ in range(100):  # up to 10 s for the background thread
+        stats = c.get("/api/stats").json()
+        if not stats["feed_running"]:
+            return stats
+        time.sleep(0.1)
+    raise AssertionError("feed did not finish")
+
+
+def test_live_feed_streams_calm_traffic(conn, monkeypatch):
+    monkeypatch.setattr(appmod, "FEED_DELAY", 0)
+    c = TestClient(appmod.app)
+    assert c.post("/api/demo/start-feed").json()["running"]
+    stats = wait_for_feed(c)
+    assert stats["transactions"] == appmod.FEED_TXS
+    assert sum(stats["open_alerts"].values()) == 0  # calm traffic raises nothing
+    c.post("/api/demo/start-feed")  # can be started again...
+    c.post("/api/demo/reset")       # ...and reset stops it
+    wait_for_feed(c)
+    assert c.get("/api/stats").json()["transactions"] <= appmod.FEED_TXS
 
 
 def test_generated_traffic_is_calm_except_injected(conn):

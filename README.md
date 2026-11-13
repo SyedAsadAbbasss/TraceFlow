@@ -34,6 +34,14 @@ flowchart LR
 
 Points from all layers are added and capped at 100. Low is under 40, medium 40–69, high 70 and above. Every reason contains real numbers. The AI layer adds evidence but cannot raise an alert on its own.
 
+## Live demo
+
+**https://traceflow.onrender.com** (placeholder: replace with the real URL after deploying)
+
+Open the page, click **Start live feed** (optional: about a minute of calm traffic streamed by the server), then click **Inject laundering ring**. No scripts are needed. On Render's free plan the site sleeps when idle and takes about a minute to wake up, and the data resets whenever it restarts.
+
+Deploy on Render (Python web service, no Docker, no Node, no training): the built dashboard (`frontend/dist`) and the trained model (`backend/models/iforest.joblib`) are committed. Either use **New > Blueprint** with `render.yaml`, or create a Web Service with build command `pip install -r requirements.txt` and start command `uvicorn backend.app:app --host 0.0.0.0 --port $PORT`. `.python-version` pins Python 3.12.
+
 ## How to run
 
 Windows PowerShell, from the repo root. Needs Python 3.12. Node.js (LTS) is only needed to change the dashboard.
@@ -59,7 +67,7 @@ Open `http://localhost:8000` and click **Inject laundering ring**. Two high aler
 Other commands:
 
 ```powershell
-.\.venv\Scripts\python.exe -m pytest -q         # 15 tests
+.\.venv\Scripts\python.exe -m pytest -q         # 16 tests
 .\.venv\Scripts\python.exe scripts/train.py     # retrain the AI layer (a trained model is included)
 ```
 
@@ -72,7 +80,7 @@ Measured on our synthetic data (no real or benchmark dataset was used):
 - 993 normal transactions replayed: **0 alerts**.
 - Injected ring (7 transfers): **2 high alerts** (cycle and structuring, both 100) in under 100 ms.
 - The AI layer tags about 9% of the normal transactions as unusual (it is set loose on purpose). That adds 30 points and never produces an alert on its own.
-- 15 automated tests pass, covering each rule, cycles of 3 and 5 accounts, chains and oversized loops that must not match, fan-in and fan-out, input validation, the alert API, the SAR PDF and the AI layer.
+- 16 automated tests pass, covering each rule, cycles of 3 and 5 accounts, chains and oversized loops that must not match, fan-in and fan-out, input validation, the alert API, the SAR PDF, the AI layer and the live feed.
 
 We report no accuracy, precision or recall. Our own generator creates both the normal traffic and the laundering patterns, so those numbers would only show that the detectors find what we planted.
 

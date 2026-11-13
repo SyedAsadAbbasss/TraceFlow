@@ -12,13 +12,13 @@ TraceFlow watches a stream of bank transfers (all fake, in ₹), gives each one 
 - `scripts/train.py` – trains that model on calm fake traffic into `backend/models/`.
 - `backend/score.py` – adds up the points, saves score and reasons, creates alerts (one per strong pattern, no duplicates).
 - `backend/sar.py` – builds the one-page SAR (Suspicious Activity Report) PDF for an alert.
-- `scripts/generate.py` makes fake traffic and the laundering ring. `scripts/replay.py` sends it to the server one transfer at a time.
+- `scripts/generate.py` makes fake traffic and the laundering ring. `scripts/replay.py` sends it to the server one transfer at a time. The **Start live feed** button does the same thing inside the server (about 200 small payments over a minute), so a deployed site needs no script.
 - `backend/tests/test_core.py` – automatic checks (`python -m pytest`).
 
 ## Dashboard (React, in `frontend/`)
 
 - `src/App.jsx` – the whole page. Asks the backend for fresh data every 2.5 seconds and hands it to the parts below.
-- `src/TopBar.jsx` – title, "Live" dot, Inject and Reset buttons.
+- `src/TopBar.jsx` – title, "Live" dot, and the Start live feed, Inject and Reset buttons.
 - `src/StatCards.jsx` – the four number cards and the alerts-over-time chart (recharts).
 - `src/AlertList.jsx` – the alert cards (newest is selected automatically).
 - `src/AlertDetail.jsx` – score, reasons with icons, related transfers, Mark reviewed / Dismiss / SAR PDF.
@@ -30,7 +30,7 @@ TraceFlow watches a stream of bank transfers (all fake, in ₹), gives each one 
 
 1. `frontend/dist` is prebuilt. Only after changing the UI: `cd frontend; npm install; npm run build; cd ..`
 2. Start everything: `.\.venv\Scripts\python.exe -m uvicorn backend.app:app`
-3. Second terminal: `.\.venv\Scripts\python.exe scripts/replay.py --calm --delay 0.3` (normal traffic).
+3. Click **Start live feed** (or, in a second terminal: `.\.venv\Scripts\python.exe scripts/replay.py --calm --delay 0.3`) for normal traffic.
 4. Open `http://localhost:8000`: "All clear — no suspicious activity".
 5. Click **Inject laundering ring**: two HIGH alerts (*circular money movement*, *structuring*) appear. Read the reasons; the red dots and arrows in the graph are the money loop.
 6. Click **SAR report (PDF)**, then **Mark reviewed** (a human decides). **Reset demo** starts again.

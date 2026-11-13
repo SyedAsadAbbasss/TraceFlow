@@ -1,7 +1,7 @@
-import { Activity, Play, RotateCcw } from 'lucide-react';
+import { Activity, Play, Radio, RotateCcw } from 'lucide-react';
 
-// Top bar: app name, tagline, a "Live" dot while the page is polling, and the two demo buttons.
-export default function TopBar({ live, busy, onInject, onReset }) {
+// Top bar: app name, tagline, a "Live" dot while the page is polling, and the three demo buttons.
+export default function TopBar({ live, busy, feeding, onFeed, onInject, onReset }) {
   return (
     <header className="topbar">
       <div className="brand">
@@ -15,6 +15,9 @@ export default function TopBar({ live, busy, onInject, onReset }) {
         <span className={'live ' + (live ? 'on' : 'off')}>
           <span className="dot" /> {live ? 'Live' : 'Offline'}
         </span>
+        <button className="btn" onClick={onFeed} disabled={busy || feeding}>
+          <Radio size={16} /> {feeding ? 'Feed running…' : 'Start live feed'}
+        </button>
         <button className="btn danger" onClick={onInject} disabled={busy}>
           <Play size={16} /> Inject laundering ring
         </button>

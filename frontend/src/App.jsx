@@ -69,6 +69,13 @@ export default function App() {
     setBusy(false);
   }
 
+  // Demo button: the server streams calm traffic for about a minute, so the page is not empty.
+  const startFeed = () =>
+    run(async () => {
+      await api('/demo/start-feed', 'POST');
+      await refresh();
+    });
+
   // Demo button: add a laundering ring, then jump to its alert.
   const inject = () =>
     run(async () => {
@@ -95,7 +102,7 @@ export default function App() {
 
   return (
     <>
-      <TopBar live={!error} busy={busy} onInject={inject} onReset={reset} />
+      <TopBar live={!error} busy={busy} feeding={!!stats?.feed_running} onFeed={startFeed} onInject={inject} onReset={reset} />
       <main className="page">
         {error && <div className="error" role="alert">{error}</div>}
         <StatCards stats={stats} />

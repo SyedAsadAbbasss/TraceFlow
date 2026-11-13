@@ -1,5 +1,6 @@
 import json
 import random
+import threading
 from datetime import datetime, timezone
 from typing import Literal
 
@@ -7,7 +8,7 @@ from fastapi import Depends, FastAPI, HTTPException, Query
 from fastapi.responses import PlainTextResponse, Response
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field, model_validator
-from scripts.generate import ring  # the generator owns the synthetic patterns; run uvicorn from the repo root
+from scripts.generate import generate, ring  # the generator owns the synthetic patterns; run uvicorn from the repo root
 
 from . import db, graph, rules, sar, score
 
@@ -119,8 +120,54 @@ def inject_ring(conn=Depends(get_db)):
     return {"ring": tag, "transactions": len(txs), "alerts": [dict(a) for a in alerts]}
 
 
+FEED_TXS, FEED_DELAY = 200, 0.3  # 200 payments, one every 0.3 s = about a minute of calm traffic
+_feed = {"stop": None, "thread": None}  # one live feed at a time (we run a single server process)
+
+
+def feed_running():
+    return bool(_feed["thread"] and _feed["thread"].is_alive())
+
+
+def _feed_transactions():
+    """Everyday payments from the generator (no salaries), at most 2 per sender so calm traffic never looks like a burst."""
+    txs = [t for t in generate(seed=7, inject=False) if t["amount"] < graph.SIGNIFICANT]
+    random.Random(7).shuffle(txs)
+    sent, picked = {}, []
+    for t in txs:
+        if sent.get(t["from_account"], 0) < 2:
+            sent[t["from_account"]] = sent.get(t["from_account"], 0) + 1
+            picked.append(t)
+    return picked[:FEED_TXS]
+
+
+def _run_feed(txs, stop):
+    """Background thread: ingest one payment every FEED_DELAY seconds, stamped with the current time."""
+    conn = db.connect()
+    try:
+        for t in txs:
+            if stop.is_set():  # reset_demo or a shutdown asks us to stop
+                break
+            score.ingest(conn, {**t, "ts": datetime.now(timezone.utc).strftime(rules.FMT)})
+            stop.wait(FEED_DELAY)
+    finally:
+        conn.close()
+
+
+@app.post("/api/demo/start-feed")
+def start_feed():
+    """Streams calm traffic through the normal ingest path for about a minute, so the demo needs no replay script."""
+    if not feed_running():
+        stop = threading.Event()
+        thread = threading.Thread(target=_run_feed, args=(_feed_transactions(), stop), daemon=True)
+        _feed.update(stop=stop, thread=thread)
+        thread.start()
+    return {"running": True, "seconds": round(FEED_TXS * FEED_DELAY)}
+
+
 @app.post("/api/demo/reset")
 def reset_demo(conn=Depends(get_db)):
+    if _feed["stop"]:
+        _feed["stop"].set()  # stop any live feed first
     with conn:
         for table in ("alerts", "transactions", "accounts"):
             conn.execute(f"DELETE FROM {table}")
@@ -135,6 +182,7 @@ def stats(conn=Depends(get_db)):
                           "GROUP BY hour ORDER BY hour DESC LIMIT 24").fetchall()
     return {
         "transactions": one("SELECT COUNT(*) FROM transactions"),
+        "feed_running": feed_running(),
         "open_alerts": {l: open_by_level.get(l, 0) for l in ("low", "medium", "high")},
         "amount_at_risk": one("SELECT COALESCE(SUM(amount),0) FROM transactions WHERE risk_score>=40"),
         "alerts_over_time": [dict(r) for r in reversed(hourly)],
