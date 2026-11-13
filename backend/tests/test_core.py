@@ -1,11 +1,13 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 import pytest
 from fastapi.testclient import TestClient
-from generate import generate
+import random
+
+from generate import generate, ring
 
 from backend import app as appmod
-from backend import db, rules, score
+from backend import db, ml, rules, score
 
 T0 = datetime(2025, 3, 1, 9, 0)
 
@@ -13,6 +15,7 @@ T0 = datetime(2025, 3, 1, 9, 0)
 @pytest.fixture
 def conn(tmp_path, monkeypatch):
     monkeypatch.setattr(db, "PATH", tmp_path / "t.db")
+    monkeypatch.setattr(ml, "MODEL_PATH", tmp_path / "none.joblib")  # AI layer off unless a test trains a model
     c = db.connect()
     yield c
     c.close()
@@ -128,6 +131,19 @@ def test_inject_ring_graph_and_reset(conn):
     assert c.post("/api/demo/reset").status_code == 200
     assert c.get("/api/stats").json()["transactions"] == 0
     assert c.get("/api/graph", params={"account_id": "RG01-S"}).status_code == 404
+
+
+def test_ai_layer_explains_unusual_account(conn, tmp_path, monkeypatch):
+    for t in generate(inject=False):  # calm traffic defines what "normal" looks like
+        score.ingest(conn, t)
+    model = tmp_path / "m.joblib"
+    assert ml.train(conn, model) > 100
+    monkeypatch.setattr(ml, "MODEL_PATH", model)
+    now = datetime.now(timezone.utc).replace(tzinfo=None)
+    results = [score.ingest(conn, t) for t in ring(random.Random(0), "RG01-", now)]
+    ai = [r for r in results for x in r["reasons"] if x.startswith("Unusual behaviour")]
+    assert ai and "average transfer" in " ".join(ai[0]["reasons"])  # plain-language reason with real numbers
+    assert not any(a == "ai_anomaly" for a in alert_patterns(conn))  # the AI layer never raises an alert on its own
 
 
 def test_generated_traffic_is_calm_except_injected(conn):

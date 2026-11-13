@@ -3,214 +3,246 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>TraceFlow – Fraud &amp; AML Monitor</title>
+<title>TraceFlow</title>
 <style>
-:root{--bg:#f4f5f8;--card:#fff;--text:#161a20;--muted:#566070;--line:#d9dee5;--accent:#1f4fd1;
---high:#a3170d;--high-bg:#fde6e3;--med:#8a5200;--med-bg:#ffefcf;--low:#25623a;--low-bg:#def3e3}
-@media(prefers-color-scheme:dark){:root{--bg:#10131a;--card:#1a1f28;--text:#e9ecf1;--muted:#a3adbb;--line:#2b323d;--accent:#8fb0ff;
---high:#ff9b92;--high-bg:#4b1e1a;--med:#ffc870;--med-bg:#47340f;--low:#85d795;--low-bg:#173a20}}
-*{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--text);font:16px/1.45 system-ui,Segoe UI,Roboto,sans-serif}
-header{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;padding:14px 24px;background:var(--card);border-bottom:1px solid var(--line)}
-h1{margin:0;font-size:1.4rem} h2{margin:0 0 10px;font-size:1.1rem}
-.sub{color:var(--muted);font-size:.9rem}
-main{padding:16px 24px;display:grid;gap:16px;max-width:1500px;margin:auto}
-.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px}
-.card,.panel{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px}
-.card .n{font-size:1.9rem;font-weight:700} .card .l{color:var(--muted);font-size:.9rem}
-.cols{display:grid;grid-template-columns:minmax(320px,1fr) minmax(360px,1.3fr);gap:16px;align-items:start}
-@media(max-width:900px){.cols{grid-template-columns:1fr}}
-button{font:inherit;cursor:pointer;border-radius:8px;border:1px solid var(--line);background:var(--card);color:var(--text);padding:8px 14px}
-button:hover:not(:disabled){border-color:var(--accent)} button:disabled{opacity:.5;cursor:default}
-button:focus-visible,select:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
-button.primary{background:var(--accent);color:#fff;border-color:var(--accent);font-weight:600}
-@media(prefers-color-scheme:dark){button.primary{color:#0c1020}}
-.chip{display:inline-block;padding:1px 9px;border-radius:99px;font-size:.78rem;font-weight:700;letter-spacing:.04em}
-.chip.high{background:var(--high-bg);color:var(--high)} .chip.medium{background:var(--med-bg);color:var(--med)} .chip.low{background:var(--low-bg);color:var(--low)}
-.filters{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:10px;font-size:.9rem}
-select{font:inherit;background:var(--card);color:var(--text);border:1px solid var(--line);border-radius:6px;padding:3px 6px}
-#list{display:grid;gap:8px;max-height:520px;overflow:auto}
-.alert{display:block;width:100%;text-align:left;padding:10px 12px}
-.alert[aria-pressed=true]{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent) inset}
-.alert .t{display:flex;gap:8px;align-items:center;justify-content:space-between}
-.alert .r{color:var(--muted);font-size:.88rem;margin-top:4px}
-.meter{height:12px;border-radius:6px;background:var(--line);overflow:hidden;margin:6px 0 2px}
-.meter span{display:block;height:100%}
-.meter.high span{background:var(--high)} .meter.medium span{background:var(--med)} .meter.low span{background:var(--low)}
-ul.reasons{margin:6px 0 12px;padding-left:22px} ul.reasons li{margin:4px 0}
-table{border-collapse:collapse;width:100%;font-size:.88rem} th,td{text-align:left;padding:5px 6px;border-bottom:1px solid var(--line)} td.num{text-align:right;white-space:nowrap}
-.tablewrap{max-height:230px;overflow:auto}
-#graph{height:420px;border:1px solid var(--line);border-radius:8px}
-.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:.85rem;color:var(--muted);margin:6px 0}
-.chart{height:200px}
-.empty{color:var(--muted);padding:18px 4px}
-#status{color:var(--high);min-height:1.3em;font-weight:600}
-.row{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}
+  body { font-family: Arial, sans-serif; font-size: 16px; margin: 0; background: #f3f4f6; color: #111; }
+  header { background: #fff; padding: 12px 20px; border-bottom: 1px solid #ccc; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; }
+  h1 { margin: 0; font-size: 22px; }
+  h2 { margin-top: 0; font-size: 18px; }
+  .page { display: flex; gap: 16px; padding: 16px 20px; flex-wrap: wrap; }
+  .left { flex: 1 1 340px; }
+  .right { flex: 2 1 480px; }
+  .box { background: #fff; border: 1px solid #ccc; border-radius: 8px; padding: 14px; margin-bottom: 16px; }
+  button { font-size: 16px; padding: 8px 14px; border: 1px solid #888; border-radius: 6px; background: #fff; cursor: pointer; }
+  button.main { background: #1d4ed8; color: #fff; border-color: #1d4ed8; }
+  .alert { display: block; width: 100%; text-align: left; margin-bottom: 8px; }
+  .alert.chosen { border: 3px solid #1d4ed8; }
+  .level { font-weight: bold; padding: 2px 8px; border-radius: 10px; }
+  .high { background: #fecaca; color: #7f1d1d; }
+  .medium { background: #fde68a; color: #78350f; }
+  .low { background: #bbf7d0; color: #14532d; }
+  .wide { flex: 1 1 100%; }
+  #graph { height: 650px; border: 1px solid #ccc; }
+  .note { color: #555; font-size: 14px; }
 </style>
 </head>
 <body>
+
 <header>
-  <div><h1>TraceFlow</h1><div class="sub">AI fraud &amp; anti-money-laundering monitor · synthetic data only</div></div>
-  <div class="row" style="margin:0">
-    <button id="inject" class="primary">Inject laundering ring</button>
-    <button id="reset">Reset demo</button>
+  <h1>TraceFlow &ndash; fraud &amp; money-laundering monitor</h1>
+  <div>
+    <button id="injectButton" class="main" onclick="injectRing()">Inject laundering ring</button>
+    <button onclick="resetDemo()">Reset demo</button>
   </div>
 </header>
-<main>
-  <div id="status" role="status" aria-live="polite"></div>
-  <section class="cards" aria-label="Summary">
-    <div class="card"><div class="n" id="s-tx">–</div><div class="l">Transactions processed</div></div>
-    <div class="card"><div class="n" id="s-high">–</div><div class="l">Open alerts: HIGH</div></div>
-    <div class="card"><div class="n" id="s-medium">–</div><div class="l">Open alerts: MEDIUM</div></div>
-    <div class="card"><div class="n" id="s-low">–</div><div class="l">Open alerts: LOW</div></div>
-    <div class="card"><div class="n" id="s-risk">–</div><div class="l">Amount in flagged transactions</div></div>
-  </section>
-  <section class="panel"><h2>Alerts over time (per hour, UTC)</h2><div class="chart"><canvas id="chart" aria-label="Alerts per hour" role="img"></canvas></div></section>
-  <div class="cols">
-    <section class="panel">
-      <h2>Live alert feed</h2>
-      <div class="filters">
-        <label>Level <select id="f-level"><option value="">All</option><option>high</option><option>medium</option><option>low</option></select></label>
-        <label>Status <select id="f-status"><option>open</option><option>reviewed</option><option>dismissed</option><option value="">All</option></select></label>
-      </div>
-      <div id="list"><div class="empty">Loading…</div></div>
-    </section>
-    <section class="panel" aria-live="polite">
-      <h2>Alert detail</h2>
-      <div id="detail"><div class="empty">Select an alert to see why it was flagged.</div></div>
-      <h2 style="margin-top:14px">Money-flow graph</h2>
-      <div id="caption" class="sub"></div>
-      <div class="legend"><span>◆ red = on a money loop (cycle)</span><span>● amber = has an alert</span><span>● grey = other account</span><span>Click an account to re-centre</span></div>
-      <div id="graph"></div>
-    </section>
+
+<div class="page">
+  <!-- Section 1: the list of alerts -->
+  <div class="left">
+    <div class="box">
+      <h2>1. Alerts</h2>
+      <div id="alertList">Loading...</div>
+    </div>
   </div>
-</main>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+
+  <div class="right">
+    <!-- Section 2: why the chosen alert was raised -->
+    <div class="box">
+      <h2>2. Why was it flagged?</h2>
+      <div id="details">Click an alert on the left.</div>
+    </div>
+
+  </div>
+
+  <!-- Section 3: who sent money to whom -->
+  <div class="box wide">
+    <h2>3. Money-flow graph</h2>
+    <p class="note">Each dot is an account, each arrow is a money transfer of &#8377;10,000 or more.
+      Red diamonds and red arrows are a money loop: money that comes back to where it started.</p>
+    <div id="graph"></div>
+  </div>
+</div>
+
+<div id="error" role="alert" style="color: #b91c1c; padding: 0 20px;"></div>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.9/standalone/umd/vis-network.min.js"></script>
 <script>
-const $ = id => document.getElementById(id);
-const css = v => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
-const money = n => new Intl.NumberFormat('en-IN', {style: 'currency', currency: 'INR', maximumFractionDigits: 0}).format(n);
-const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c]));
-const when = t => `${t.slice(8, 10)}/${t.slice(5, 7)} ${t.slice(11, 16)}`;
-const NAMES = {cycle: 'Circular money movement', structuring: 'Structuring', fan_in: 'Fan-in (many → one)', fan_out: 'Fan-out (one → many)',
-  pass_through: 'Pass-through account', amount_spike: 'Amount spike', velocity: 'Velocity'};
-const chipHtml = l => `<span class="chip ${l}">${l.toUpperCase()}</span>`;
+  var selectedId = null;    // the id of the alert the user clicked (null = none yet)
+  var lastAlertsText = "";  // what the list looked like last time, so we only redraw when it changed
+  var lastGraphText = "";   // same idea for the graph, so it does not jump around every 3 seconds
 
-async function api(path, method = 'GET', body) {
-  const r = await fetch('/api' + path, {method, headers: body ? {'Content-Type': 'application/json'} : {}, body: body && JSON.stringify(body)});
-  if (!r.ok) throw new Error(`${path} → ${r.status}`);
-  return r.json();
-}
-const setStatus = m => { $('status').textContent = m; };
-
-let selected = null, graphAcct = null, seen = {list: '', detail: '', graph: ''}, net = null;
-
-// ---- chart
-Chart.defaults.color = css('--muted');
-const chart = new Chart($('chart'), {type: 'bar', data: {labels: [], datasets: [{data: [], backgroundColor: css('--accent'), maxBarThickness: 36}]},
-  options: {responsive: true, maintainAspectRatio: false, animation: false, plugins: {legend: {display: false}},
-    scales: {y: {beginAtZero: true, ticks: {precision: 0}}}}});
-
-function renderStats(s) {
-  $('s-tx').textContent = s.transactions.toLocaleString('en-IN');
-  for (const l of ['high', 'medium', 'low']) $('s-' + l).textContent = s.open_alerts[l];
-  $('s-risk').textContent = money(s.amount_at_risk);
-  chart.data.labels = s.alerts_over_time.map(h => `${h.hour.slice(8, 10)}/${h.hour.slice(5, 7)} ${h.hour.slice(11)}:00`);
-  chart.data.datasets[0].data = s.alerts_over_time.map(h => h.n);
-  chart.update();
-}
-
-// ---- alert feed
-function renderList(alerts) {
-  const j = JSON.stringify(alerts) + selected;
-  if (j === seen.list) return;
-  seen.list = j;
-  $('list').innerHTML = alerts.length ? alerts.map(a => `
-    <button class="alert" data-id="${a.id}" aria-pressed="${a.id === selected}">
-      <div class="t"><span>${chipHtml(a.level)} <strong>${esc(NAMES[a.pattern] || a.pattern)}</strong></span><span>score ${a.score}</span></div>
-      <div class="r">${esc(a.account_name || a.account_id)} (${esc(a.account_id)}) · ${when(a.created_at)} UTC${a.status !== 'open' ? ' · ' + a.status : ''}</div>
-      <div class="r">${esc(a.reasons[0] || '')}</div>
-    </button>`).join('') : '<div class="empty">No alerts match. Traffic looks calm.</div>';
-}
-
-// ---- detail
-async function showDetail() {
-  if (selected == null) return;
-  const a = await api('/alerts/' + selected);
-  const j = JSON.stringify(a);
-  if (j !== seen.detail) {
-    seen.detail = j;
-    $('detail').innerHTML = `
-      <div>${chipHtml(a.level)} <strong>${esc(NAMES[a.pattern] || a.pattern)}</strong> · ${esc(a.account_name || a.account_id)} (${esc(a.account_id)}) · status: <strong>${a.status}</strong></div>
-      <div class="meter ${a.level}" role="meter" aria-label="Risk score" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${a.score}"><span style="width:${a.score}%"></span></div>
-      <div class="sub">Risk score ${a.score} / 100</div>
-      <h2 style="margin-top:12px">Why it was flagged</h2>
-      <ul class="reasons">${a.reasons.map(r => `<li>${esc(r)}</li>`).join('')}</ul>
-      <div class="row">
-        <button data-status="reviewed" ${a.status === 'reviewed' ? 'disabled' : ''}>Mark reviewed</button>
-        <button data-status="dismissed" ${a.status === 'dismissed' ? 'disabled' : ''}>Dismiss</button>
-      </div>
-      <h2>Related transactions (24 h)</h2>
-      <div class="tablewrap"><table><thead><tr><th>Time (UTC)</th><th>From → To</th><th class="num">Amount</th><th>Channel</th><th class="num">Risk</th></tr></thead><tbody>
-      ${a.transactions.map(t => `<tr><td>${when(t.ts)}</td><td>${esc(t.from_account)} → ${esc(t.to_account)}</td><td class="num">${money(t.amount)}</td><td>${t.channel}</td><td class="num">${t.risk_score}</td></tr>`).join('')}
-      </tbody></table></div>`;
+  // Makes text safe to put inside HTML, so odd characters in names cannot break the page.
+  function safe(text) {
+    var div = document.createElement("div");
+    div.textContent = text;
+    return div.innerHTML;
   }
-  await showGraph(graphAcct || a.account_id);
-}
 
-// ---- graph
-async function showGraph(acct) {
-  let g;
-  try { g = await api('/graph?account_id=' + encodeURIComponent(acct)); } catch { $('graph').innerHTML = '<div class="empty">No graph for this account.</div>'; net = null; seen.graph = ''; return; }
-  const j = JSON.stringify(g);
-  if (j === seen.graph && net) return;
-  seen.graph = j;
-  const focus = g.nodes.find(n => n.focus);
-  $('caption').textContent = `Around ${focus.name} (${focus.id}): transfers of ${money(g.min_amount)} or more in the last 48 h.`;
-  const red = '#d92d20', amber = '#e8a317', grey = css('--muted'), text = css('--text');
-  const nodes = g.nodes.map(n => ({id: n.id, label: `${n.name}\n${n.id}`, shape: n.in_cycle ? 'diamond' : 'dot', size: n.in_cycle ? 20 : 14,
-    color: {background: n.in_cycle ? red : n.flagged ? amber : grey, border: n.focus ? text : 'transparent'}, borderWidth: n.focus ? 4 : 1, font: {color: text, size: 13}}));
-  const edges = g.edges.map(e => ({from: e.from, to: e.to, arrows: 'to', label: `₹${(e.amount / 1000).toFixed(1)}k`, width: e.in_cycle ? 4 : 1.5,
-    color: {color: e.in_cycle ? red : grey}, font: {color: text, size: 11, strokeWidth: 3, strokeColor: css('--card')}, smooth: {type: 'dynamic'}}));
-  if (net) net.destroy();
-  net = new vis.Network($('graph'), {nodes: new vis.DataSet(nodes), edges: new vis.DataSet(edges)}, {physics: {barnesHut: {springLength: 170, gravitationalConstant: -7000}, stabilization: {iterations: 150}}, interaction: {hover: true}});
-  net.on('click', p => { if (p.nodes.length) { graphAcct = p.nodes[0]; showGraph(graphAcct); } });
-}
+  // Sends a request to the backend (the FastAPI server) and returns the answer as data.
+  async function callApi(path, method, body) {
+    var response = await fetch("/api" + path, {
+      method: method || "GET",
+      headers: { "Content-Type": "application/json" },
+      body: body ? JSON.stringify(body) : undefined
+    });
+    if (!response.ok) {
+      throw new Error(path + " failed with status " + response.status);
+    }
+    return response.json();
+  }
 
-// ---- actions
-function select(id) { selected = id; graphAcct = null; seen = {list: '', detail: '', graph: ''}; refresh(); }
-$('list').addEventListener('click', e => { const b = e.target.closest('.alert'); if (b) select(+b.dataset.id); });
-$('detail').addEventListener('click', async e => {
-  const b = e.target.closest('[data-status]'); if (!b) return;
-  try { await api('/alerts/' + selected, 'PATCH', {status: b.dataset.status}); seen.detail = ''; refresh(); } catch (err) { setStatus('Could not update: ' + err.message); }
-});
-['f-level', 'f-status'].forEach(id => $(id).addEventListener('change', () => { seen.list = ''; refresh(); }));
-$('inject').addEventListener('click', async () => {
-  $('inject').disabled = true; setStatus('');
-  try {
-    const r = await api('/demo/inject-ring', 'POST');
-    const first = r.alerts.find(a => a.pattern === 'cycle') || r.alerts[0];
-    if (first) select(first.id);
-  } catch (err) { setStatus('Inject failed: ' + err.message); }
-  $('inject').disabled = false;
-});
-$('reset').addEventListener('click', async () => {
-  if (!confirm('Delete all transactions and alerts?')) return;
-  try { await api('/demo/reset', 'POST'); selected = graphAcct = null; seen = {list: '', detail: '', graph: ''};
-    $('detail').innerHTML = '<div class="empty">Select an alert to see why it was flagged.</div>'; $('caption').textContent = ''; if (net) { net.destroy(); net = null; } $('graph').innerHTML = '';
-    refresh(); } catch (err) { setStatus('Reset failed: ' + err.message); }
-});
+  // Asks the backend for all open alerts and shows them in section 1.
+  async function loadAlerts() {
+    var alerts = await callApi("/alerts?status=open");
 
-async function refresh() {
-  const q = new URLSearchParams(); if ($('f-level').value) q.set('level', $('f-level').value); if ($('f-status').value) q.set('status', $('f-status').value);
-  try {
-    const [stats, alerts] = await Promise.all([api('/stats'), api('/alerts?' + q)]);
-    if (selected == null && alerts.length) selected = alerts[0].id;  // show the newest alert's detail + graph by default
-    renderStats(stats); renderList(alerts); await showDetail(); setStatus('');
-  } catch (err) { setStatus('Cannot reach the API: ' + err.message); }
-}
-refresh(); setInterval(refresh, 2500);
+    // If the user has not picked an alert yet, pick the newest one automatically.
+    if (selectedId === null && alerts.length > 0) {
+      selectedId = alerts[0].id;
+    }
+    drawAlertList(alerts);
+
+    if (selectedId === null) {
+      document.getElementById("details").textContent = "No alerts. Traffic looks calm.";
+      document.getElementById("graph").innerHTML = "";
+    } else {
+      await loadDetails();
+    }
+  }
+
+  // Draws one button per alert: level (HIGH/MEDIUM/LOW), pattern name, score and the account.
+  function drawAlertList(alerts) {
+    var text = JSON.stringify(alerts) + selectedId;
+    if (text === lastAlertsText) { return; }   // nothing changed, leave the page alone
+    lastAlertsText = text;
+
+    if (alerts.length === 0) {
+      document.getElementById("alertList").textContent = "No open alerts. Traffic looks calm.";
+      return;
+    }
+    var html = "";
+    for (var i = 0; i < alerts.length; i++) {
+      var a = alerts[i];
+      var chosen = (a.id === selectedId) ? " chosen" : "";
+      html += '<button class="alert' + chosen + '" onclick="chooseAlert(' + a.id + ')">' +
+        '<span class="level ' + a.level + '">' + a.level.toUpperCase() + '</span> ' +
+        '<b>' + safe(a.pattern.replace("_", " ")) + '</b> &middot; score ' + a.score + '<br>' +
+        safe(a.account_name) + ' (' + safe(a.account_id) + ')' +
+        '</button>';
+    }
+    document.getElementById("alertList").innerHTML = html;
+  }
+
+  // Runs when the user clicks an alert in the list.
+  function chooseAlert(id) {
+    selectedId = id;
+    lastAlertsText = "";
+    lastGraphText = "";
+    refresh();
+  }
+
+  // Shows the reasons for the chosen alert in section 2, then draws its graph in section 3.
+  async function loadDetails() {
+    var detail = await callApi("/alerts/" + selectedId);
+
+    var html = '<span class="level ' + detail.level + '">' + detail.level.toUpperCase() + '</span> ' +
+      '<b>' + safe(detail.pattern.replace("_", " ")) + '</b> &middot; risk score ' + detail.score + ' out of 100' +
+      '<p>Account: ' + safe(detail.account_name) + ' (' + safe(detail.account_id) + ')</p>' +
+      '<ul>';
+    for (var i = 0; i < detail.reasons.length; i++) {
+      html += '<li>' + safe(detail.reasons[i]) + '</li>';
+    }
+    html += '</ul>' +
+      '<p class="note">An analyst makes the final decision. The system never blocks anyone by itself.</p>' +
+      '<button onclick="setStatus(\'reviewed\')">Mark reviewed</button> ' +
+      '<button onclick="setStatus(\'dismissed\')">Dismiss</button>';
+
+    document.getElementById("details").innerHTML = html;
+    await loadGraph(detail.account_id);
+  }
+
+  // Asks the backend for the accounts and transfers around one account, then draws them.
+  async function loadGraph(accountId) {
+    var data = await callApi("/graph?account_id=" + encodeURIComponent(accountId));
+    var text = JSON.stringify(data);
+    if (text === lastGraphText) { return; }    // same graph as before, do not redraw
+    lastGraphText = text;
+    drawGraph(data);
+  }
+
+  // Draws the graph. Accounts on a money loop are red diamonds, the others are grey dots.
+  function drawGraph(data) {
+    var nodes = [];
+    for (var i = 0; i < data.nodes.length; i++) {
+      var n = data.nodes[i];
+      nodes.push({
+        id: n.id,
+        label: n.name + "\n" + n.id,
+        shape: n.in_cycle ? "diamond" : "dot",
+        color: n.in_cycle ? "#dc2626" : "#6b7280"
+      });
+    }
+    var edges = [];
+    for (var j = 0; j < data.edges.length; j++) {
+      var e = data.edges[j];
+      edges.push({
+        from: e.from,
+        to: e.to,
+        arrows: "to",
+        label: "₹" + Math.round(e.amount / 1000) + "k",
+        color: e.in_cycle ? "#dc2626" : "#6b7280",
+        width: e.in_cycle ? 4 : 1
+      });
+    }
+    var options = { physics: { barnesHut: { springLength: 170, gravitationalConstant: -7000 } } };
+    new vis.Network(document.getElementById("graph"), { nodes: nodes, edges: edges }, options);
+  }
+
+  // Marks the chosen alert as "reviewed" or "dismissed". Either way it leaves the open list.
+  async function setStatus(status) {
+    await callApi("/alerts/" + selectedId, "PATCH", { status: status });
+    selectedId = null;
+    lastAlertsText = "";
+    refresh();
+  }
+
+  // Demo button: adds a fake laundering ring to the data, then shows its alert.
+  async function injectRing() {
+    try {
+      var result = await callApi("/demo/inject-ring", "POST");
+      var cycleAlert = result.alerts.find(function (a) { return a.pattern === "cycle"; });
+      chooseAlert(cycleAlert ? cycleAlert.id : result.alerts[0].id);
+    } catch (err) {
+      document.getElementById("error").textContent = "Inject failed: " + err.message;
+    }
+  }
+
+  // Demo button: deletes all transactions and alerts so we can start the demo again.
+  async function resetDemo() {
+    if (!confirm("Delete all transactions and alerts?")) { return; }
+    try {
+      await callApi("/demo/reset", "POST");
+      selectedId = null;
+      lastAlertsText = "";
+      lastGraphText = "";
+      refresh();
+    } catch (err) {
+      document.getElementById("error").textContent = "Reset failed: " + err.message;
+    }
+  }
+
+  // Reloads everything from the backend. Shows a message if the backend cannot be reached.
+  async function refresh() {
+    try {
+      await loadAlerts();
+      document.getElementById("error").textContent = "";
+    } catch (err) {
+      document.getElementById("error").textContent = "Cannot reach the backend: " + err.message;
+    }
+  }
+
+  // Start: load once now, then again every 3 seconds so new alerts appear on their own.
+  refresh();
+  setInterval(refresh, 3000);
 </script>
 </body>
 </html>

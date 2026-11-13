@@ -1,7 +1,7 @@
 """Combine layers into one 0-100 risk score + reasons, store it, raise alerts."""
 import json
 
-from . import graph, rules
+from . import graph, ml, rules
 
 
 def level(score):
@@ -17,7 +17,7 @@ def ingest(conn, p):
         cur = conn.execute("INSERT INTO transactions(from_account, to_account, amount, ts, channel) VALUES (?,?,?,?,?)",
                            (p["from_account"], p["to_account"], p["amount"], p["ts"], p["channel"]))
         tx = {**p, "id": cur.lastrowid}
-        hits = rules.check(conn, tx) + graph.check(conn, tx)
+        hits = rules.check(conn, tx) + graph.check(conn, tx) + ml.check(conn, tx)
         sc = min(100, sum(h[1] for h in hits))
         reasons = [h[2] for h in hits]
         conn.execute("UPDATE transactions SET risk_score=?, reasons=? WHERE id=?", (sc, json.dumps(reasons), tx["id"]))
