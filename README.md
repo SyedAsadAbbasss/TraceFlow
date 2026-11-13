@@ -36,7 +36,7 @@ Points from all layers are added and capped at 100. Low is under 40, medium 40â€
 
 ## Live demo
 
-**https://traceflow.onrender.com** (placeholder: replace with the real URL after deploying)
+**https://traceflow-hs43.onrender.com**
 
 Open the page, click **Start live feed** (optional: about a minute of calm traffic streamed by the server), then click **Inject laundering ring**. No scripts are needed. On Render's free plan the site sleeps when idle and takes about a minute to wake up, and the data resets whenever it restarts.
 
