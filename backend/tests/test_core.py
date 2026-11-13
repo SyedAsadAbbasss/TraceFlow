@@ -3,6 +3,7 @@ from datetime import datetime, timedelta, timezone
 import pytest
 from fastapi.testclient import TestClient
 import random
+import re
 
 from generate import generate, ring
 
@@ -144,6 +145,20 @@ def test_ai_layer_explains_unusual_account(conn, tmp_path, monkeypatch):
     ai = [r for r in results for x in r["reasons"] if x.startswith("Unusual behaviour")]
     assert ai and "average transfer" in " ".join(ai[0]["reasons"])  # plain-language reason with real numbers
     assert not any(a == "ai_anomaly" for a in alert_patterns(conn))  # the AI layer never raises an alert on its own
+
+
+def test_sar_pdf_is_one_page(conn):
+    c = TestClient(appmod.app)
+    c.post("/api/demo/inject-ring")  # cycle + structuring alerts, the busiest case
+    for t in range(5):
+        tx(conn, "A", f"B{t}", 49_000, hrs=t)
+    alerts = c.get("/api/alerts").json()
+    assert len(alerts) == 3
+    for a in alerts:
+        r = c.get(f"/api/alerts/{a['id']}/sar.pdf")
+        assert r.status_code == 200 and r.headers["content-type"] == "application/pdf" and r.content.startswith(b"%PDF")
+        assert len(re.findall(rb"/Type /Page(?!s)", r.content)) == 1, a["pattern"]  # exactly one page
+    assert c.get("/api/alerts/999/sar.pdf").status_code == 404
 
 
 def test_generated_traffic_is_calm_except_injected(conn):

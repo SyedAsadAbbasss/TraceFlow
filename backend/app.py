@@ -4,11 +4,12 @@ from datetime import datetime, timezone
 from typing import Literal
 
 from fastapi import Depends, FastAPI, HTTPException, Query
-from fastapi.responses import FileResponse
+from fastapi.responses import PlainTextResponse, Response
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field, model_validator
 from scripts.generate import ring  # the generator owns the synthetic patterns; run uvicorn from the repo root
 
-from . import db, graph, rules, score
+from . import db, graph, rules, sar, score
 
 app = FastAPI(title="TraceFlow")
 
@@ -47,11 +48,6 @@ def _json_row(r):
     return d
 
 
-@app.get("/", include_in_schema=False)
-def dashboard():
-    return FileResponse(db.HERE / "static" / "index.html")
-
-
 @app.post("/api/transactions", status_code=201)
 def add_transaction(t: TxIn, conn=Depends(get_db)):
     ts = t.ts or datetime.now(timezone.utc)
@@ -86,6 +82,14 @@ def get_alert(alert_id: int, conn=Depends(get_db)):
         "SELECT * FROM transactions WHERE (from_account=?1 OR to_account=?1) AND ts>?2 AND ts<=?3 ORDER BY ts DESC LIMIT 100",
         (d["account_id"], rules.ago(end, 24), end))]
     return d
+
+
+@app.get("/api/alerts/{alert_id}/sar.pdf")
+def sar_pdf(alert_id: int, conn=Depends(get_db)):
+    alert = get_alert(alert_id, conn)  # 404 if the alert does not exist
+    account = conn.execute("SELECT * FROM accounts WHERE id=?", (alert["account_id"],)).fetchone()
+    return Response(sar.build(alert, dict(account)), media_type="application/pdf",
+                    headers={"Content-Disposition": f'inline; filename="SAR-{alert_id}.pdf"'})
 
 
 @app.patch("/api/alerts/{alert_id}")
@@ -135,3 +139,13 @@ def stats(conn=Depends(get_db)):
         "amount_at_risk": one("SELECT COALESCE(SUM(amount),0) FROM transactions WHERE risk_score>=40"),
         "alerts_over_time": [dict(r) for r in reversed(hourly)],
     }
+
+
+# The React dashboard (built with `npm run build` in frontend/). Mounted last so the /api routes above win.
+DIST = db.HERE.parent / "frontend" / "dist"
+if DIST.exists():
+    app.mount("/", StaticFiles(directory=DIST, html=True), name="frontend")
+else:
+    @app.get("/", include_in_schema=False)
+    def frontend_missing():
+        return PlainTextResponse("Dashboard not built. Run: cd frontend; npm install; npm run build", status_code=503)

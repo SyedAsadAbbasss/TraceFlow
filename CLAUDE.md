@@ -234,7 +234,7 @@ Hard deadline 3:00 PM. A working, pushed demo by 2:15 PM matters more than any f
 
 ### Cut
 - NO Kaggle datasets, NO LightGBM, NO SHAP. Use only our synthetic generator.
-- NO React/Vite/Node. The dashboard is ONE static file `backend/static/index.html` served by FastAPI, plain JS with fetch + polling. Load Chart.js and vis-network from cdnjs with pinned versions. No build step.
+- UPDATED 11:48 by the user: the dashboard is now React (Vite, JavaScript) in `frontend/`, allowed packages only react, react-dom, recharts, react-force-graph-2d, lucide-react (+ vite and its React plugin). `npm run build` writes `frontend/dist`, which FastAPI serves at "/". Plain CSS, no Tailwind or UI kit. The old `backend/static/index.html` is deleted. The backend API is unchanged.
 - NO account page.
 
 ### Keep
