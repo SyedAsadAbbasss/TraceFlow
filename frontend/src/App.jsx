@@ -103,7 +103,7 @@ export default function App() {
           <AlertList alerts={alerts} selectedId={selectedId} onSelect={select} />
           <AlertDetail detail={detail} busy={busy} onStatus={setStatus} />
         </div>
-        <MoneyGraph graph={graph} />
+        <MoneyGraph graph={graph} transactions={detail?.transactions} />
       </main>
     </>
   );
